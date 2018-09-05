@@ -18,6 +18,14 @@ var _jsxFileName = "D:\\Chat App\\chat-app\\components\\Chat.js";
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -34,9 +42,29 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 
 
 
-var SAD_EMOJI = [55357, 56864];
-var HAPPY_EMOJI = [55357, 56832];
-var NEUTRAL_EMOJI = [55357, 56848];
+var colors = ['#e21400', '#91580f', '#f8a700', '#f78b00', '#58dc00', '#287b00', '#a8f07a', '#4ae8c4', '#3b88eb', '#3824aa', '#a700ff', '#d300e7'];
+
+var getUsernameColor = function getUsernameColor(username) {
+  // Compute hash code
+  var hash = 7;
+
+  for (var i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + (hash << 5) - hash;
+  } // Calculate color
+
+
+  var index = Math.abs(hash % colors.length);
+  return colors[index];
+};
+
+var emojis = {
+  sad: [55357, 56864],
+  happy: [55357, 56832],
+  neutral: [55357, 56848]
+};
+var RIGHT = 'right';
+var LEFT = 'left';
+var encrypted = true;
 
 var Chat =
 /*#__PURE__*/
@@ -61,23 +89,98 @@ function (_Component) {
       value: {
         chats: []
       }
+    }), Object.defineProperty(_assertThisInitialized(_this), "scrollToBottom", {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function value() {
+        _this.chatsEnd.scrollIntoView({
+          behavior: 'smooth'
+        });
+      }
     }), Object.defineProperty(_assertThisInitialized(_this), "handleKeyUp", {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: function value(evt) {
-        var value = evt.target.value;
+      value: function value(_ref2) {
+        var keyCode = _ref2.keyCode,
+            shiftKey = _ref2.shiftKey,
+            target = _ref2.target;
 
-        if (evt.keyCode === 13 && !evt.shiftKey) {
+        if (keyCode === 13 && !shiftKey) {
+          var timestamp = +new Date();
+          var message = target.value;
           var user = _this.props.activeUser;
           var chat = {
             user: user,
-            message: value,
-            timestamp: +new Date()
+            message: message,
+            timestamp: timestamp
           };
-          evt.target.value = '';
+          target.value = '';
           __WEBPACK_IMPORTED_MODULE_1_axios___default.a.post('/message', chat);
         }
+      }
+    }), Object.defineProperty(_assertThisInitialized(_this), "renderChat", {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function value(chat, idx) {
+        var previousIndex = Math.max(0, idx - 1);
+        var previousChat = _this.state.chats[previousIndex];
+        var position = chat.user === _this.props.activeUser ? RIGHT : LEFT; // user messages on right
+
+        var isFirst = previousIndex === idx;
+        var inSequence = chat.user === previousChat.user;
+        var hasDelay = Math.ceil((chat.timestamp - previousChat.timestamp) / (1000 * 60));
+        var mood;
+
+        if (chat.sentiment === 0) {
+          mood = emojis.neutral;
+        } else {
+          mood = chat.sentiment > 0 ? emojis.happy : emojis.sad;
+        }
+
+        var username = chat.user || 'Anonymous';
+        var usernameColor = getUsernameColor(username);
+        return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react__["Fragment"], {
+          key: idx,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 103
+          }
+        }, isFirst || !inSequence || hasDelay ? __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
+          className: "d-block w-100 font-weight-bold text-dark mt-4 pb-1 px-1 text-".concat(position),
+          style: {
+            fontSize: '0.9rem'
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 107
+          }
+        }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
+          style: {
+            color: usernameColor
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 110
+          }
+        }, username, ' ', __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
+          style: {
+            fontSize: '1.2rem'
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 113
+          }
+        }, String.fromCodePoint.apply(String, _toConsumableArray(mood))))) : null, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3__ChatMessage__["a" /* default */], {
+          message: chat.message,
+          position: position,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 120
+          }
+        }));
       }
     }), _temp));
   }
@@ -87,16 +190,23 @@ function (_Component) {
     value: function componentDidMount() {
       var _this2 = this;
 
-      this.pusher = new __WEBPACK_IMPORTED_MODULE_2_pusher_js___default.a(process.env.PUSHER_APP_KEY, {
-        cluster: process.env.PUSHER_APP_CLUSTER,
-        encrypted: true
-      });
+      this.scrollToBottom();
+      var cluster = process.env.PUSHER_APP_CLUSTER;
+      var appKey = process.env.PUSHER_APP_KEY;
+      var pusherConfig = {
+        cluster: cluster,
+        encrypted: encrypted
+      };
+      this.pusher = new __WEBPACK_IMPORTED_MODULE_2_pusher_js___default.a(appKey, pusherConfig);
       this.channel = this.pusher.subscribe('chat-room');
-      this.channel.bind('new-message', function (_ref2) {
-        var _ref2$chat = _ref2.chat,
-            chat = _ref2$chat === void 0 ? null : _ref2$chat;
+      this.channel.bind('new-message', function (_ref3) {
+        var _ref3$chat = _ref3.chat,
+            chat = _ref3$chat === void 0 ? null : _ref3$chat;
         var chats = _this2.state.chats;
-        chat && chats.push(chat);
+
+        if (chat) {
+          chats.push(chat);
+        }
 
         _this2.setState({
           chats: chats
@@ -113,6 +223,11 @@ function (_Component) {
       });
     }
   }, {
+    key: "componentDidUpdate",
+    value: function componentDidUpdate() {
+      this.scrollToBottom();
+    }
+  }, {
     key: "componentWillUnmount",
     value: function componentWillUnmount() {
       this.pusher.disconnect();
@@ -122,10 +237,10 @@ function (_Component) {
     value: function render() {
       var _this3 = this;
 
-      return this.props.activeUser && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react__["Fragment"], {
+      return this.props.activeUser ? __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react__["Fragment"], {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 54
+          lineNumber: 128
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
         className: "border-bottom border-gray w-100 d-flex align-items-center bg-white",
@@ -134,13 +249,13 @@ function (_Component) {
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 55
+          lineNumber: 129
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("h2", {
         className: "text-dark mb-0 mx-4 px-2",
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 56
+          lineNumber: 130
         }
       }, this.props.activeUser)), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
         className: "px-4 pb-4 w-100 d-flex flex-row flex-wrap align-items-start align-content-start position-relative",
@@ -150,61 +265,28 @@ function (_Component) {
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 58
+          lineNumber: 132
         }
-      }, this.state.chats.map(function (chat, index) {
-        var previous = Math.max(0, index - 1);
-        var previousChat = _this3.state.chats[previous];
-        var position = chat.user === _this3.props.activeUser ? "right" : "left";
-        var isFirst = previous === index;
-        var inSequence = chat.user === previousChat.user;
-        var hasDelay = Math.ceil((chat.timestamp - previousChat.timestamp) / (1000 * 60)) > 1;
-        var mood = chat.sentiment > 0 ? HAPPY_EMOJI : chat.sentiment === 0 ? NEUTRAL_EMOJI : SAD_EMOJI;
-        return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react__["Fragment"], {
-          key: index,
-          __source: {
-            fileName: _jsxFileName,
-            lineNumber: 71
-          }
-        }, (isFirst || !inSequence || hasDelay) && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
-          className: "d-block w-100 font-weight-bold text-dark mt-4 pb-1 px-1 text-".concat(position),
-          style: {
-            fontSize: '0.9rem'
-          },
-          __source: {
-            fileName: _jsxFileName,
-            lineNumber: 73
-          }
-        }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
-          className: "d-block",
-          style: {
-            fontSize: '1.6rem'
-          },
-          __source: {
-            fileName: _jsxFileName,
-            lineNumber: 74
-          }
-        }, String.fromCodePoint.apply(String, mood)), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
-          __source: {
-            fileName: _jsxFileName,
-            lineNumber: 75
-          }
-        }, chat.user || 'Anonymous')), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3__ChatMessage__["a" /* default */], {
-          message: chat.message,
-          position: position,
-          __source: {
-            fileName: _jsxFileName,
-            lineNumber: 78
-          }
-        }));
+      }, this.state.chats.map(this.renderChat), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
+        style: {
+          clear: 'both',
+          float: 'left'
+        },
+        ref: function ref(el) {
+          _this3.chatsEnd = el;
+        },
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 136
+        }
       })), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
-        className: "border-top border-gray w-100 px-4 d-flex align-items-center bg-light",
+        className: "border-bottom border-gray w-100 d-flex align-items-center bg-light",
         style: {
           minHeight: 90
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 83
+          lineNumber: 138
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("textarea", {
         className: "form-control px-3 py-2",
@@ -215,16 +297,15 @@ function (_Component) {
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 84
+          lineNumber: 139
         }
-      })));
+      }))) : null;
     }
   }]);
 
   return Chat;
 }(__WEBPACK_IMPORTED_MODULE_0_react__["Component"]);
 
-;
 /* harmony default export */ __webpack_exports__["a"] = (Chat);
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__("./node_modules/process/browser.js")))
 
@@ -238,85 +319,45 @@ function (_Component) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 var _jsxFileName = "D:\\Chat App\\chat-app\\components\\ChatMessage.js";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-
-
-var ChatMessage =
-/*#__PURE__*/
-function (_Component) {
-  _inherits(ChatMessage, _Component);
-
-  function ChatMessage() {
-    _classCallCheck(this, ChatMessage);
-
-    return _possibleConstructorReturn(this, (ChatMessage.__proto__ || Object.getPrototypeOf(ChatMessage)).apply(this, arguments));
-  }
-
-  _createClass(ChatMessage, [{
-    key: "render",
-    value: function render() {
-      var _props = this.props,
-          _props$position = _props.position,
-          position = _props$position === void 0 ? 'left' : _props$position,
-          message = _props.message;
-      var isRight = position.toLowerCase() === 'right';
-      var align = isRight ? 'text-right' : 'text-left';
-      var justify = isRight ? 'justify-content-end' : 'justify-content-start';
-      var messageBoxStyles = {
-        maxWidth: '70%',
-        flexGrow: 0
-      };
-      var messageStyles = {
-        fontWeight: 500,
-        lineHeight: 1.4,
-        whiteSpace: 'pre-wrap'
-      };
-      return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
-        className: "w-100 my-1 d-flex ".concat(justify),
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 23
-        }
-      }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
-        className: "bg-light rounded border border-gray p-2",
-        style: {
-          maxWidth: '70%',
-          flexGrow: 0
-        },
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 24
-        }
-      }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
-        className: "d-block text-secondary ".concat(align),
-        style: {
-          fontWeight: 500,
-          lineHeight: 1.4,
-          whiteSpace: 'pre-wrap'
-        },
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 25
-        }
-      }, this.props.message)));
+var ChatMessage = function ChatMessage(_ref) {
+  var _ref$position = _ref.position,
+      position = _ref$position === void 0 ? 'left' : _ref$position,
+      message = _ref.message;
+  var isRight = position.toLowerCase() === 'right';
+  var align = isRight ? 'text-right' : 'text-left';
+  var justify = isRight ? 'justify-content-end' : 'justify-content-start';
+  var messageBoxStyles = {
+    maxWidth: '70%',
+    flexGrow: 0
+  };
+  var messageStyles = {
+    fontWeight: 500,
+    lineHeight: 1.4,
+    whiteSpace: 'pre-wrap'
+  };
+  return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
+    className: "w-100 my-1 d-flex ".concat(justify),
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 20
     }
-  }]);
-
-  return ChatMessage;
-}(__WEBPACK_IMPORTED_MODULE_0_react__["Component"]);
+  }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
+    className: "bg-light rounded border border-gray p-2",
+    style: messageBoxStyles,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 21
+    }
+  }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
+    className: "d-block text-secondary ".concat(align),
+    style: messageStyles,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 22
+    }
+  }, message)));
+};
 
 /* harmony default export */ __webpack_exports__["a"] = (ChatMessage);
 
@@ -338,25 +379,25 @@ var Layout = function Layout(props) {
   return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react__["Fragment"], {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 5
+      lineNumber: 6
     }
   }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_next_head___default.a, {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 6
+      lineNumber: 7
     }
   }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("meta", {
     charSet: "utf-8",
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 7
+      lineNumber: 8
     }
   }), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("meta", {
     name: "viewport",
     content: "width=device-width, initial-scale=1, shrink-to-fit=no",
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 8
+      lineNumber: 9
     }
   }), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("link", {
     rel: "stylesheet",
@@ -365,14 +406,14 @@ var Layout = function Layout(props) {
     crossOrigin: "anonymous",
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 9
+      lineNumber: 10
     }
   }), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("title", {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 10
+      lineNumber: 15
     }
-  }, props.pageTitle || 'Realtime Chat')), props.children);
+  }, props.pageTitle || 'Realtime Chat, Y\'all!')), props.children);
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (Layout);
@@ -10868,8 +10909,8 @@ module.exports = function(originalModule) {
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(module) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__("./node_modules/react/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Chat__ = __webpack_require__("./components/Chat.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_Layout__ = __webpack_require__("./components/Layout.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Layout__ = __webpack_require__("./components/Layout.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_Chat__ = __webpack_require__("./components/Chat.js");
 var _jsxFileName = "D:\\Chat App\\chat-app\\pages\\index.js";
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -10917,9 +10958,13 @@ function (_Component) {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: function value(evt) {
-        if (evt.keyCode === 13) {
-          var user = evt.target.value;
+      value: function value(_ref2) {
+        var keyCode = _ref2.keyCode,
+            target = _ref2.target;
+
+        if (keyCode === 13) {
+          // On pressing enter
+          var user = target.value;
 
           _this.setState({
             user: user
@@ -10938,12 +10983,12 @@ function (_Component) {
         color: '#999',
         border: 0,
         borderBottom: '1px solid #666',
-        boderRadius: 0,
+        borderRadius: 0,
         fontSize: '3rem',
         fontWeight: 500,
-        boxShadow: 'none !important'
+        boxShadow: 'none !import'
       };
-      return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__components_Layout__["a" /* default */], {
+      return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1__components_Layout__["a" /* default */], {
         pageTitle: "Chat App",
         __source: {
           fileName: _jsxFileName,
@@ -10961,17 +11006,23 @@ function (_Component) {
           fileName: _jsxFileName,
           lineNumber: 32
         }
+      }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
+        className: "row position-absolute w-100 h-100",
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 33
+        }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("section", {
         className: "col-md-8 d-flex flex-row flex-wrap align-items-center align-content-center px-5",
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 33
+          lineNumber: 34
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("div", {
         className: "px-5 mx-5",
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 34
+          lineNumber: 35
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
         className: "d-block w-100 h1 text-light",
@@ -10980,12 +11031,12 @@ function (_Component) {
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 35
+          lineNumber: 36
         }
       }, user ? __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 36
+          lineNumber: 39
         }
       }, __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("span", {
         style: {
@@ -10993,52 +11044,42 @@ function (_Component) {
         },
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 36
+          lineNumber: 39
         }
-      }, "Hello!"), " ", user) : "What is your name?"), !user && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("input", {
+      }, "Hello!"), " ", user) : 'What is your name?'), !user ? __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("input", {
         type: "text",
         className: "form-control mt-3 px-3 py-2",
         onKeyUp: this.handleKeyUp,
         autoComplete: "off",
-        style: {
-          background: 'transparent',
-          color: '#999',
-          border: 0,
-          borderBottom: '1px solid #666',
-          borderRadius: 0,
-          fontSize: '3rem',
-          fontWeight: 500,
-          boxShadow: 'none !important'
-        },
+        style: nameInputStyles,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 38
+          lineNumber: 46
         }
-      }))), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("section", {
+      }) : null)), __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement("section", {
         className: "col-md-4 position-relative d-flex flex-wrap h-100 align-items-start align-content-between bg-white px-0",
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 41
+          lineNumber: 56
         }
-      }, user && __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1__components_Chat__["a" /* default */], {
+      }, user ? __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2__components_Chat__["a" /* default */], {
         activeUser: user,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 42
+          lineNumber: 59
         }
-      })))));
+      }) : null)))));
     }
   }]);
 
   return IndexPage;
 }(__WEBPACK_IMPORTED_MODULE_0_react__["Component"]);
 
-;
 /* harmony default export */ __webpack_exports__["default"] = (function () {
   return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(IndexPage, {
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 53
+      lineNumber: 70
     }
   });
 });

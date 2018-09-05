@@ -1,32 +1,30 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class ChatMessage extends Component {
+const ChatMessage = ({ position = 'left', message }) => {
+  const isRight = position.toLowerCase() === 'right';
+  const align = (isRight) ? 'text-right' : 'text-left';
+  const justify = (isRight) ? 'justify-content-end' : 'justify-content-start';
 
-  render() {
-    const { position = 'left', message } = this.props;
-    const isRight = position.toLowerCase() === 'right';
+  const messageBoxStyles = {
+    maxWidth: '70%',
+    flexGrow: 0
+  };
 
-    const align = isRight ? 'text-right' : 'text-left';
-    const justify = isRight ? 'justify-content-end' : 'justify-content-start';
-      
-    const messageBoxStyles = {
-        maxWidth: '70%',
-        flexGrow: 0
-    };
-      
-    const messageStyles = {
-        fontWeight: 500,
-        lineHeight: 1.4,
-        whiteSpace: 'pre-wrap'
-    };
+  const messageStyles = {
+    fontWeight: 500,
+    lineHeight: 1.4,
+    whiteSpace: 'pre-wrap'
+  };
 
-    return <div className={`w-100 my-1 d-flex ${justify}`}>
-      <div className="bg-light rounded border border-gray p-2" style={{ maxWidth: '70%', flexGrow: 0 }}>
-        <span className={`d-block text-secondary ${align}`} style={{ fontWeight: 500, lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{this.props.message}</span>
+  return (
+    <div className={`w-100 my-1 d-flex ${justify}`}>
+      <div className="bg-light rounded border border-gray p-2" style={messageBoxStyles}>
+          <span className={`d-block text-secondary ${align}`} style={messageStyles}>
+            {message}
+          </span>
       </div>
     </div>
-  }
-
-}
+  )
+};
 
 export default ChatMessage;
